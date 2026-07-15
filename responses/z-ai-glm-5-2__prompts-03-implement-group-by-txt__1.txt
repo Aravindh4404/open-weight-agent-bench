@@ -1,0 +1,25 @@
+```python
+from collections import defaultdict
+
+def group_by_key(items, key):
+    grouped = defaultdict(list)
+    for item in items:
+        if key in item:
+            grouped[item[key]].append(item)
+    return dict(grouped)
+
+# Test
+if __name__ == "__main__":
+    data = [
+        {"name": "Alice", "age": 30},
+        {"name": "Bob", "age": 25},
+        {"name": "Charlie", "age": 30},
+        {"name": "Diana"}  # missing 'age' key
+    ]
+    expected = {
+        30: [{"name": "Alice", "age": 30}, {"name": "Charlie", "age": 30}],
+        25: [{"name": "Bob", "age": 25}]
+    }
+    assert group_by_key(data, "age") == expected
+    print("Test passed")
+```

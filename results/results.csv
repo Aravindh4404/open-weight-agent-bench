@@ -1,0 +1,2 @@
+run_id,timestamp,model,prompt,prompt_tokens,completion_tokens,total_tokens,cost_usd,latency_ms,pass,response_file
+z-ai-glm-5-2__prompts-03-implement-group-by-txt__1,2026-07-13T22:46:20.090Z,z-ai/glm-5.2,prompts/03-implement-group-by.txt,68,473,541,0.0021764,950,,responses/z-ai-glm-5-2__prompts-03-implement-group-by-txt__1.txt
