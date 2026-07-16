@@ -170,8 +170,3 @@ status indicator rather than relying on asking the model directly.
   Pi's footer bar showed `z-ai/glm-5.2` — footer is authoritative, model
   self-report is not. Same artifact as originally documented: GLM
   pattern-matches onto Claude/GPT transcripts in its training data.
-
-
-REDACTED_OPENROUTER_KEY
-
-export OPENROUTER_API_KEY="REDACTED_OPENROUTER_KEY"

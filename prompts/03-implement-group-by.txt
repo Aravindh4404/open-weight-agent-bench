@@ -1,1 +1,0 @@
-Implement a function `group_by_key(items, key)` in Python that takes a list of dicts and a key name, and returns a dict mapping each distinct value of that key to a list of dicts that have that value. Include one assert-based test. Return only the code.

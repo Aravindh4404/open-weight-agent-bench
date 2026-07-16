@@ -1,8 +1,0 @@
-Refactor this JavaScript so it uses async/await instead of .then chains, without changing behavior.
-
-function fetchUser(id) {
-    return fetch("/api/users/" + id)
-        .then(function (r) { return r.json(); })
-        .then(function (u) { return u.name; })
-        .catch(function (e) { return null; });
-}
