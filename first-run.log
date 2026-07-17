@@ -1,0 +1,25 @@
+Found 13 unique generation ID(s). Querying OpenRouter...
+  [missing] gen-1784227597-AoJMGXDAz3ZyRLVVkyxH — response: 
+  [missing] gen-1784227601-bhy3aX23LX5XZyAcw6a9 — response: 
+  [missing] gen-1784227662-11DXfhlP6y9au8KBF9ai — response: 
+  [missing] gen-1784227797-nu57IOCbWs1W9Sgw7mMR — response: 
+  [missing] gen-1784227803-u8giANLdAPbCB900I4o4 — response: 
+  [missing] gen-1784227808-eMkeIgpqdmzKQgK6j0mV — response: 
+  [missing] gen-1784228930-oVnpn12cPTSNJxgW4kde — response: 
+  [missing] gen-1784228935-r1RlUruZnhi1STjDVxhc — response: 
+  [missing] msg_011Cd6Fb5dLXzGYxM6o6f8iR — response: 
+  [missing] msg_011Cd6FTt2PEXES4VMYkoPXU — response: 
+  [missing] msg_011Cd6FUbLKPdbw8wdyWGW99 — response: 
+  [missing] msg_011Cd6FUK3HmZncH2C4WiGWe — response: 
+  [missing] msg_011Cd6FXLwxrepjd7zEULHCJ — response: {"error":{"message":"Generation msg_011Cd6FXLwxrepjd7zEULHCJ not found","code":404}}
+
+=== OpenRouter-reported totals (source of truth) ===
+Generations found:      0
+Generations missing:    13
+Total prompt tokens:    0
+Total completion tokens: 0
+Total cost:             $0
+
+Compare the two token totals above against the matching row in
+usage-log.csv (cumulative_input_tokens / cumulative_output_tokens)
+for this same session.

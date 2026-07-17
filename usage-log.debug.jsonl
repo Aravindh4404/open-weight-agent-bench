@@ -1,2 +1,9 @@
-{"turns":35,"model":"z-ai/glm-5.2","input_tokens":189208,"output_tokens":30630,"cache_creation_input_tokens":110261,"cache_read_input_tokens":1158905}
-{"turns":2,"model":"claude-sonnet-5","input_tokens":4,"output_tokens":296,"cache_creation_input_tokens":31402,"cache_read_input_tokens":52248}
+[{"model":"z-ai/glm-5.2","turns":5,"input_tokens":47303,"output_tokens":1482,"cache_creation_input_tokens":0,"cache_read_input_tokens":151808,"openrouter_routed":5,"other_routed":0,"total_input_tokens_incl_cache":199111}]
+[{"model":"z-ai/glm-5.2","turns":4,"input_tokens":12560,"output_tokens":995,"cache_creation_input_tokens":0,"cache_read_input_tokens":132992,"openrouter_routed":4,"other_routed":0,"total_input_tokens_incl_cache":145552}]
+[{"model":"z-ai/glm-5.2","turns":5,"input_tokens":47303,"output_tokens":1482,"cache_creation_input_tokens":0,"cache_read_input_tokens":151808,"openrouter_routed":5,"other_routed":0,"total_input_tokens_incl_cache":199111}]
+[{"model":"z-ai/glm-5.2","turns":4,"input_tokens":12560,"output_tokens":995,"cache_creation_input_tokens":0,"cache_read_input_tokens":132992,"openrouter_routed":4,"other_routed":0,"total_input_tokens_incl_cache":145552}]
+[{"model":"claude-haiku-4-5-20251001","turns":11,"input_tokens":90,"output_tokens":3220,"cache_creation_input_tokens":16859,"cache_read_input_tokens":347366,"openrouter_routed":0,"other_routed":11,"total_input_tokens_incl_cache":364315}]
+[{"model":"claude-haiku-4-5-20251001","turns":11,"input_tokens":90,"output_tokens":3220,"cache_creation_input_tokens":16859,"cache_read_input_tokens":347366,"openrouter_routed":0,"other_routed":11,"total_input_tokens_incl_cache":364315}]
+[{"model":"z-ai/glm-5.2","turns":4,"input_tokens":12560,"output_tokens":995,"cache_creation_input_tokens":0,"cache_read_input_tokens":132992,"openrouter_routed":4,"other_routed":0,"total_input_tokens_incl_cache":145552}]
+[{"model":"z-ai/glm-5.2","turns":5,"input_tokens":41846,"output_tokens":1371,"cache_creation_input_tokens":0,"cache_read_input_tokens":155136,"openrouter_routed":5,"other_routed":0,"total_input_tokens_incl_cache":196982}]
+[{"model":"z-ai/glm-5.2","turns":4,"input_tokens":36751,"output_tokens":952,"cache_creation_input_tokens":0,"cache_read_input_tokens":110848,"openrouter_routed":4,"other_routed":0,"total_input_tokens_incl_cache":147599}]

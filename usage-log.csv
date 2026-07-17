@@ -1,3 +1,10 @@
-timestamp,session_id,harness,env_model,transcript_model,assistant_turns_so_far,cumulative_input_tokens,cumulative_output_tokens,cumulative_cache_creation_input_tokens,cumulative_cache_read_input_tokens
-2026-07-16T19:09:13Z,ba837ca2-9322-4e7d-b9db-b934be298ea8,claude-code,z-ai/glm-5.2,z-ai/glm-5.2,35,189208,30630,110261,1158905
-2026-07-16T20:48:59Z,0facf6ee-72c9-4e43-b21c-6ee4ba61577f,claude-code,,claude-sonnet-5,2,4,296,31402,52248
+timestamp,session_id,harness,env_model,transcript_model,unique_requests_so_far,cumulative_input_tokens,cumulative_output_tokens,cumulative_cache_creation_input_tokens,cumulative_cache_read_input_tokens,total_input_tokens_incl_cache,openrouter_routed_count,other_routed_count
+2026-07-16T21:55:59Z,2c69837a-1e5f-49cd-93af-374bb6a12416,claude-code-openrouter,z-ai/glm-5.2,z-ai/glm-5.2,5,47303,1482,0,151808,199111,5,0
+2026-07-16T21:59:27Z,d5763ab2-103a-4e53-82f8-5db8f016c2eb,claude-code-openrouter,z-ai/glm-5.2,z-ai/glm-5.2,4,12560,995,0,132992,145552,4,0
+2026-07-16T22:06:04Z,2c69837a-1e5f-49cd-93af-374bb6a12416,claude-code,,z-ai/glm-5.2,5,47303,1482,0,151808,199111,5,0
+2026-07-16T22:06:38Z,d5763ab2-103a-4e53-82f8-5db8f016c2eb,claude-code,,z-ai/glm-5.2,4,12560,995,0,132992,145552,4,0
+2026-07-16T22:06:48Z,20a70c36-ee9d-47a3-bd93-254f73ab121d,claude-code,,claude-haiku-4-5-20251001,11,90,3220,16859,347366,364315,0,11
+2026-07-16T22:23:15Z,20a70c36-ee9d-47a3-bd93-254f73ab121d,claude-code,,claude-haiku-4-5-20251001,11,90,3220,16859,347366,364315,0,11
+2026-07-16T22:23:15Z,d5763ab2-103a-4e53-82f8-5db8f016c2eb,claude-code-openrouter,z-ai/glm-5.2,z-ai/glm-5.2,4,12560,995,0,132992,145552,4,0
+2026-07-16T22:23:15Z,8d72a154-4b1f-47e3-ab2d-9f00e09f07b8,claude-code,z-ai/glm-5.2,z-ai/glm-5.2,5,41846,1371,0,155136,196982,5,0
+2026-07-17T17:19:55Z,f3c70516-8964-4ea6-b710-c90b939d7ce3,claude-code,z-ai/glm-5.2,z-ai/glm-5.2,4,36751,952,0,110848,147599,4,0
