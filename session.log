@@ -1,0 +1,26 @@
+⚠ claude.ai connectors are disabled because ANTHROPIC_API_KEY or another auth source is set and takes precedence over your claude.ai login · Unset it to load your organization's connectors
+Error: Input must be provided either through stdin or as a prompt argument when using --print
+{
+  descriptor: {
+    name: "claude_code.session.count",
+    type: "COUNTER",
+    description: "Count of CLI sessions started",
+    unit: "",
+    valueType: 1,
+    advice: {},
+  },
+  dataPointType: 3,
+  dataPoints: [
+    {
+      attributes: {
+        "user.id": "c8cad0a6c6e9427ddf4a39eaf4de6a597fdc05bd74241e21e8e444c0050d1cae",
+        "session.id": "91df172a-cb75-4833-9964-5c9eb0cbcb3a",
+        "terminal.type": "vscode",
+        start_type: "fresh",
+      },
+      startTime: [ 1784581914, 429000000 ],
+      endTime: [ 1784581914, 457000000 ],
+      value: 1,
+    }
+  ],
+}

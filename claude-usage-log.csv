@@ -1,0 +1,2 @@
+session_id,model,input_combined,output,cache_read,cache_creation,total_tokens
+899cc4c4-0470-4587-95bd-f9e4bee3abc6,z-ai/glm-5.2,270511,1141,259968,0,271652
