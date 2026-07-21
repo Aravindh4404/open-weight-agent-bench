@@ -1,257 +1,235 @@
 # Token/Cost Measurement Methods — Claude Code, Pi, OpenCode
 
-Companion doc to `project-context-phase2.md`. Covers Phase 2's token-measurement
-sub-problem: how to get per-session token/cost data out of each harness,
-what was tried, what worked, and how to reproduce it.
+Companion doc to `project-context-phase2.md`. This is the final, complete
+record of how token/cost measurement was solved for all three harnesses:
+what was tried, what failed and why, what actually works, and what's been
+independently verified against OpenRouter's real billing data.
 
-All three harnesses run **GLM 5.2 (`z-ai/glm-5.2`) via OpenRouter**, using each
-harness's own direct-base-URL override (no local proxy — see
-`project-context-phase2.md` for why the LiteLLM proxy approach was abandoned).
-
----
-
-## Summary table
-
-| Harness | Method | Token accuracy | Cost accuracy | OTel used? |
-|---|---|---|---|---|
-| Claude Code | OTel console exporter | ✅ verified (previous session, via `hooks/log-usage.sh` cross-check vs OpenRouter) | ⚠️ likely self-calculated, not yet cross-checked | ✅ yes — this is the method |
-| Pi | Custom extension → CSV | ✅ verified exact match vs OpenRouter dashboard | ⚠️ confirmed self-calculated, off by ~2–18% | ❌ not available in Pi (checked source — design doc only, unshipped) |
-| OpenCode | Built-in `opencode stats` command | not yet cross-checked | ⚠️ likely self-calculated | ⚠️ tried, abandoned (see below) |
-
-**Working rule going forward: trust token counts from all three. Treat cost
-columns as estimates only — use OpenRouter's dashboard (`openrouter.ai/activity`)
-as the source of truth for actual dollar comparisons.**
+All three harnesses run **GLM 5.2 (`z-ai/glm-5.2`) via OpenRouter**, using
+each harness's own direct-base-URL override (`eval-env.sh`).
 
 ---
 
-## Claude Code
+## Summary table (final, verified)
 
-### Method: OpenTelemetry, console exporter
+| Harness | Method | Automatic? | Verified against OpenRouter? |
+|---|---|---|---|
+| Claude Code | OTLP export → custom receiver | Yes | Yes — exact match, 2 separate sessions |
+| Pi | Custom extension → CSV | Yes | Yes — exact match, 2 separate sessions |
+| OpenCode | Built-in `opencode stats` | Yes | Yes — output & message count exact match, input within display rounding, 1 session |
 
-Claude Code has native, real OTel support (unlike Pi) — confirmed by testing,
-not just docs.
+**Cost columns from all three harnesses are self-calculated internally,
+not read from OpenRouter's actual bill — confirmed unreliable (Claude Code
+overstated real cost by ~4x across 3 sessions checked; Pi was off 2–18%).
+Never use a harness's own cost field for real dollar comparisons — always
+pull cost from OpenRouter's dashboard/API instead.**
 
-**How to run:**
+**Confirmed token formula** (matches OpenRouter's combined "Input" column):
+```
+OpenRouter's Input = fresh input tokens + cache-read tokens (+ cache-creation tokens, unverified — always 0 in every session checked so far)
+```
+
+---
+
+## Claude Code — full story
+
+### What finally works: OTLP export with `http/json` protocol
+
+**Files:**
+- `claude-otlp-receiver.js` — HTTP server that receives Claude Code's
+  telemetry and maintains `claude-usage-log.csv` automatically
+- `replay-otlp-log.js` — rebuilds the CSV from the permanent raw log
+  (`claude-otlp-raw.jsonl`) if the parsing logic is ever changed again
+
+**How to run (two terminals):**
+
+Terminal A — start the receiver, leave running:
+```bash
+cd ~/open-weight-agent-bench
+node claude-otlp-receiver.js
+```
+
+Terminal B — run Claude Code:
 ```bash
 cd ~/open-weight-agent-bench
 source ./eval-env.sh
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
-export OTEL_METRICS_EXPORTER=console
-export OTEL_LOGS_EXPORTER=console
+export OTEL_METRICS_EXPORTER=otlp
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
 claude
 ```
-Send a message, let it finish, `/exit`. Telemetry events print directly to
-the terminal — no receiver script needed.
+Chat and exit normally. `claude-usage-log.csv` updates itself with zero
+manual steps.
 
-**To save output to a file instead of just watching it scroll:**
-```bash
-claude 2>&1 | tee -a ~/open-weight-agent-bench/claude-otel-log.txt
-```
+Works identically for real Claude models (not just GLM) — just skip
+`source ./eval-env.sh`. The OTLP mechanism doesn't depend on which model
+or backend is being used.
 
-**What it gives you** (per session, split by `query_source`: `main` = your
-actual conversation turn, `auxiliary` = internal background calls like title
-generation):
-- `claude_code.token.usage` — broken into `input`, `output`, `cacheRead`,
-  `cacheCreation`
-- `claude_code.cost.usage` — dollar cost (likely self-calculated, not
-  confirmed against OpenRouter's actual bill yet)
-- `claude_code.session.count`, `claude_code.active_time.total` — bonus fields
-  neither Pi nor OpenCode expose
+### Everything that was tried and failed first (in order)
 
-**Verification status:** token counts from this method haven't been directly
-cross-checked yet (only the older `hooks/log-usage.sh` transcript-based
-method was verified, in a prior session, against OpenRouter's dashboard/API
-with a documented ~382–388 token gap explained by write-lag). To verify OTel
-console output specifically: compare a session's `token.usage` totals against
-either (a) `hooks/log-usage.sh`'s log for that same session ID, or
-(b) OpenRouter's dashboard filtered to that session's timestamp window.
+1. **`claude 2>&1 | tee -a log.txt`** — piping stdout broke Claude Code's
+   TTY detection, forcing it into non-interactive `--print` mode, which
+   then crashed immediately since no prompt argument was given:
+   `Error: Input must be provided either through stdin or as a prompt
+   argument when using --print`.
 
-**Full OTLP pipe (only pursue if you need external tooling to ingest this)**:
-```bash
-export OTEL_METRICS_EXPORTER=otlp
-export OTEL_LOGS_EXPORTER=otlp
-export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318"
-```
-Not yet tried for Claude Code — console mode was sufficient.
+2. **`claude 2> >(tee -a log.txt >&2)`** (process substitution,
+   stderr-only) — ran without crashing, but captured nothing real. Root
+   cause identified in attempt #3.
+
+3. **`claude 2>> log.txt`** (plain stderr redirect) — confirmed
+   conclusively via `grep` that a real session's data never appeared in
+   the file at all. This proved Claude Code's console-exporter output
+   goes to **stdout**, not stderr — so anything that only redirects
+   stderr can never capture it, explaining why #2 also failed.
+
+4. **`script -q -c "claude" log.txt`** (pty-wrapper approach) — never
+   actually tested; `script` is **not installed** in this Git
+   Bash/MSYS environment (`which script` returned nothing).
+
+5. **Manual copy-paste + `parse-cc-tokens.js`** — this DID work and was
+   used successfully for several sessions, but requires manually copying
+   the printed console block into a log file after every session. Fully
+   accurate, but not automatic. Superseded by the OTLP method below and
+   no longer needed — file can be deleted.
+
+6. **First OTLP attempt** — receiver was reachable (confirmed via curl,
+   got HTTP 200), but Claude Code never sent it any data at all — no
+   entries ever appeared in `claude-otlp-raw.jsonl` after multiple real
+   sessions. Root cause found by checking Claude Code's own public
+   GitHub repo (`anthropics/claude-code`) changelog and
+   `examples/gateway/` config samples: **OTLP's default wire protocol
+   is not plain JSON** (it can be `grpc` or binary `http/protobuf`,
+   neither of which a simple JSON-parsing HTTP server can read, and
+   `grpc` may fail at the connection level entirely rather than sending
+   a parseable request). Fix: explicitly set
+   `OTEL_EXPORTER_OTLP_PROTOCOL=http/json`. This was the missing piece —
+   confirmed working immediately after adding it.
+
+### Critical bug found and fixed after OTLP started "working"
+
+Even after data started arriving, the **first version** of
+`claude-otlp-receiver.js` produced silently wrong numbers. Root cause:
+Claude Code's OTLP metrics use **DELTA aggregation temporality**
+(`"aggregationTemporality": 1` in the raw payload) — each flush reports
+only the *increment* since the last flush, not a running total. Multiple
+flushes happen per session (roughly one per conversational turn).
+
+The original receiver used `Math.max(prev, value)` per data point,
+correct for *cumulative* counters (like the earlier console-export
+method, which does report running totals) but **wrong for delta data** —
+it silently picked whichever single flush happened to report the largest
+number for each token type, instead of adding all flushes together.
+
+**Verified impact:** on one real session with 2 flushes, the buggy
+version reported 190,776 combined input tokens; the correct (fixed)
+version reported 270,511 — a 41.6% undercount, with no error or warning
+of any kind. The fix (in the current `claude-otlp-receiver.js`) sums
+values per `(session_id, query_source, token_type)` across all flushes
+instead of taking the max. **If this script is ever edited again, do
+not reintroduce `Math.max` for token/cost aggregation — always sum.**
+
+### Verification sessions (post-fix)
+- Session `899cc4c4...`: fixed receiver reported 270,511 input / 1,141
+  output. OpenRouter dashboard (8 matching rows, summed by hand):
+  270,511 / 1,141 — exact match.
+- Session `6f70e66f...`: receiver reported 181,328 / 999. OpenRouter (6
+  rows summed): 181,328 / 999 — exact match.
 
 ---
 
-## Pi
+## Pi — unchanged from earlier verification
 
-### Method: custom extension, no OTel
+Extension-based, no OTel involved (Pi has no working OTel implementation
+— checked its actual source on GitHub; only a design-doc proposal exists,
+unshipped).
 
-**Why not OTel:** cloned Pi's GitHub repo (`earendil-works/pi`) and searched
-the actual shipped source. Found `observability.md`, a *design proposal* for
-future OTel support — but the only telemetry code that actually ships
-(`telemetry.ts`) is an unrelated anonymous install-ping toggle. **No working
-OTel exists in Pi.** Nothing to test.
-
-**What Pi has instead:** an "extensions" system — TypeScript files
-auto-loaded from a folder, can subscribe to lifecycle events including
-`turn_end`, which fires with `event.message.usage` already containing
-per-turn token/cost data.
-
-**Setup (already done):**
-```bash
-mkdir -p ~/.pi/agent/extensions
-cat > ~/.pi/agent/extensions/token-logger.ts << 'EOF'
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { appendFileSync, existsSync, writeFileSync } from "fs";
-import { join } from "path";
-import { homedir } from "os";
-
-const LOG_PATH = join(homedir(), "open-weight-agent-bench", "pi-usage-log.csv");
-const HEADER = "timestamp,session_id,turn_index,input,output,cache_read,cache_write,total_tokens,cost_input,cost_output,cost_total\n";
-
-export default function (pi: ExtensionAPI) {
-  if (!existsSync(LOG_PATH)) writeFileSync(LOG_PATH, HEADER);
-
-  pi.on("turn_end", async (event, ctx) => {
-    const msg = event.message;
-    if (msg.role !== "assistant" || !msg.usage) return;
-    const u = msg.usage;
-    const row = [
-      new Date().toISOString(),
-      ctx.sessionManager?.getSessionId?.() ?? "unknown",
-      event.turnIndex,
-      u.input, u.output, u.cacheRead, u.cacheWrite, u.totalTokens,
-      u.cost.input, u.cost.output, u.cost.total,
-    ].join(",");
-    appendFileSync(LOG_PATH, row + "\n");
-  });
-}
-EOF
-```
-
-**To use (runs automatically, nothing extra needed each session):**
 ```bash
 cd ~/open-weight-agent-bench
 source ./eval-env.sh
 pi
 ```
-Send a message, let it finish, `/exit`.
-
-**To check the log:**
-```bash
-cat ~/open-weight-agent-bench/pi-usage-log.csv
-```
-
-**Verification performed:** compared two logged rows directly against
-OpenRouter's activity dashboard.
-- Tokens: **exact match** in both cases (1,366/24 and 1,963/194).
-- Cost: Pi calculates this itself from its own internal per-model price
-  table (`calculateCost()` in `packages/ai/src/models.ts`) — **not** read
-  from OpenRouter's response. Confirmed mismatch: one row was ~18% low
-  ($0.0014 logged vs $0.00166 actual), another ~2% low ($0.00144 vs
-  $0.00141). Inconsistent gap → don't trust the cost column for precise
-  comparisons.
+Logs automatically to `pi-usage-log.csv` via
+`~/.pi/agent/extensions/token-logger.ts`. Verified exact against
+OpenRouter across 2 sessions. Cost column confirmed self-calculated and
+off by 2–18% — don't trust it for dollar comparisons.
 
 ---
 
-## OpenCode
+## OpenCode — built-in stats, now verified
 
-### Attempt 1: OpenTelemetry (tried, abandoned)
-
-OpenCode does have real, working OTel support (confirmed in source —
-`packages/core/src/observability/otlp.ts`, built on `@effect/opentelemetry`
-and the Vercel AI SDK's telemetry conventions).
-
-**Setup that was tried:**
-```bash
-mkdir -p ~/.config/opencode
-cat > ~/.config/opencode/config.json << 'EOF'
-{ "experimental": { "openTelemetry": true } }
-EOF
-```
-```bash
-cat > ~/open-weight-agent-bench/otlp-receiver.js << 'EOF'
-const http = require("http");
-const fs = require("fs");
-const logFile = require("path").join(__dirname, "opencode-otlp-log.jsonl");
-
-http.createServer((req, res) => {
-  let body = "";
-  req.on("data", chunk => body += chunk);
-  req.on("end", () => {
-    fs.appendFileSync(logFile, body + "\n");
-    res.writeHead(200); res.end("{}");
-  });
-}).listen(4318, () => console.log("Listening on :4318 for OTLP logs/traces"));
-EOF
-```
-Ran receiver in one terminal, `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318`
-+ `opencode` in another.
-
-**Why abandoned:** the pipe worked (real OTLP data arrived, confirmed via
-resource attributes like `service.version`, `opencode.run` ID), but the
-captured spans/logs were internal startup activity — plugin loading
-(`Plugin.load` for each provider), HTTP API server boot (`/api/model`,
-`/api/provider`, etc.), SQLite credential queries. No `ai.usage`,
-`gen_ai.*`, or `session.llm` span with token/cost data ever appeared, even
-after a confirmed complete conversation turn. Concluded not worth pursuing
-further once a simpler option was found (below).
-
-**These files/config are no longer needed and can be deleted:**
-```bash
-rm ~/open-weight-agent-bench/otlp-receiver.js
-rm ~/.config/opencode/config.json
-```
-
-### Attempt 2: built-in `opencode stats` command (working method)
-
-Found by reading OpenCode's source further: session data is stored in a
-local SQLite database, not flat JSON files as initially assumed from an
-older part of the codebase. Real location on this machine:
-```
-~/AppData/Roaming/opencode/opencode.db
-```
-(found via `ls -la ~/AppData/Roaming/opencode`)
-
-OpenCode ships a CLI command that reads this database directly — no config
-or setup needed at all, works out of the box.
-
-**To use:**
 ```bash
 cd ~/open-weight-agent-bench
 source ./eval-env.sh
 opencode
 ```
-Send a message, wait for the full response to finish, exit normally.
-
-**To check totals:**
+Check with:
 ```bash
 opencode stats --days 0 --models
 ```
-Prints session count, message count, total cost, token breakdown
-(input/output/cache read/cache write), and per-model breakdown. Confirmed
-working — printed accurate `openrouter/z-ai/glm-5.2` data matching the
-session sidebar shown live in the TUI.
+No custom code — reads OpenCode's own local SQLite database directly
+(`~/AppData/Roaming/opencode/opencode.db`).
 
-**Limitation:** `opencode stats` gives **aggregated totals** (e.g. "today's
-total"), not one row per individual session/turn like Pi's CSV. For
-per-task comparison data, either:
-- run `--days 0` before and after each task and take the delta manually, or
-- (not yet built) write a script reading `opencode.db` directly via its
-  `SessionTable` schema (`cost`, `tokens` columns) for per-session rows
+**First verification, done in this session:** compared the "Model Usage"
+block against 6 matching OpenRouter rows for the same session.
+- Output tokens: 851 vs 851 — exact.
+- Message count: 6 vs 6 — exact.
+- Input tokens: 39.6K + 99.3K (cache read) ≈ 138.9K vs a hand-summed
+  138,975 from OpenRouter — consistent with rounding (opencode only
+  displays one decimal place in "K" units), not a byte-for-byte
+  verification the way Pi/Claude Code got.
 
-**Verification status:** not yet cross-checked against OpenRouter's
-dashboard. Given the same self-calculated-cost pattern found in Pi, assume
-the same caveat applies (tokens likely accurate, cost likely an estimate)
-until verified.
+**Known quirk:** OpenCode's own "Overview" section and "Model Usage"
+section can disagree with each other when a stray/unrelated session's
+data is mixed in (observed: Overview showed Output=802, Model Usage
+showed 851, for what should have been the same data — resolved once a
+stray extra row was excluded from the manual OpenRouter comparison).
+Always cross-check against the **Model Usage** block specifically, not
+Overview, if the two ever disagree.
 
 ---
 
-## Open items / next steps
+## Cleanup — files no longer needed (superseded by OTLP method)
 
-1. Cross-check Claude Code's OTel token counts against `hooks/log-usage.sh`
-   or OpenRouter dashboard (not yet done — only the older hook method was
-   previously verified).
-2. Cross-check OpenCode's `opencode stats` cost numbers against OpenRouter
-   dashboard (not yet done).
-3. Decide whether per-task granularity is needed for OpenCode (currently
-   only aggregated `--days` totals available) — if so, build the
-   `opencode.db`-reading script.
-4. Move to designing the actual harder comparison tasks (multi-file bug
-   fixes, iterate-against-failing-test) now that all three harnesses have
-   a working token-measurement method — this was blocked on measurement
-   methodology and is now unblocked.
+```bash
+cd ~/open-weight-agent-bench
+rm -f test-otlp-setup.sh
+rm -f test-otlp-setup.ps1
+rm -f OTLP-TESTING.md
+rm -f RUN-OTLP-TEST.txt
+rm -f claude-otlp-receiver-verbose.js
+rm -f parse-cc-tokens.js
+rm -f claude-otel-console.log
+```
+
+## Files that matter, going forward
+
+```
+eval-env.sh                   — OpenRouter/GLM-5.2 routing config
+claude-otlp-receiver.js       — Claude Code's automatic logger (fixed version)
+replay-otlp-log.js            — rebuilds claude-usage-log.csv from raw data if needed
+claude-otlp-raw.jsonl         — permanent raw payload history (never delete)
+claude-usage-log.csv          — Claude Code's clean output
+pi-usage-log.csv              — Pi's clean output
+~/.pi/agent/extensions/token-logger.ts — Pi's logging extension
+token-measurement-methods.md  — this file
+token-commands.md             — day-to-day quick-reference commands
+project-context-phase2.md     — overall project context
+```
+
+## Open items
+
+- OpenCode's input-token verification relied on rounded display values
+  (137,975 vs "138.9K") — not a byte-exact check like Pi/Claude Code got.
+  Querying `opencode.db` directly (SQLite) would give exact figures if
+  fully precise verification is ever needed.
+- Real-Claude-model (non-GLM) sessions haven't been independently
+  cross-checked against anything (no OpenRouter equivalent exists for
+  direct Anthropic billing) — Anthropic Console's usage page is an
+  unexplored possible source if this is ever needed.
+- Now that all three harnesses have working, verified token measurement,
+  next phase is designing and running the actual comparison task matrix
+  (see evaluation design discussion — task sourcing, sealed git history,
+  pass/fail grading via held-out tests, per-task logging with a
+  `task_id` column added to each harness's CSV).
