@@ -1,0 +1,6 @@
+session_id,model,input_combined,output,cache_read,cache_creation,total_tokens
+019f80b6-1738-7aec-b666-b499a0e98cee,z-ai/glm-5.2,3322,219,2368,0,3541
+019f80c6-22c9-7715-ab7d-60f145051046,z-ai/glm-5.2,1366,24,0,0,1390
+019f85a9-bbb8-73e0-95b8-7c87257c584a,z-ai/glm-5.2,2799,143,0,0,2942
+019f8615-0369-76de-8d3b-820e5ee95557,z-ai/glm-5.2,11640,1170,10176,0,12810
+019f8696-c94e-7389-a5d5-1eb53cdc0553,z-ai/glm-5.2,2761,87,2368,0,2848
