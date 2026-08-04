@@ -24,7 +24,11 @@ const RAW_LOG_PATH = path.join(__dirname, "claude-otlp-raw.jsonl");
 // sessionId -> querySource -> tokenType -> value (max, since these are
 // cumulative counters that may be re-sent with updated totals)
 const data = {};
-const sessionModels = {};
+// sessionId -> model -> cumulative tokens seen for that model. A session can
+// emit datapoints under more than one model (e.g. a small haiku-tagged
+// auxiliary call inside an otherwise-sonnet session) — label the row with
+// whichever model accounts for the most tokens, not whichever arrived first.
+const sessionModelTokens = {};
 
 function getAttr(attributes, key) {
   const found = attributes?.find((a) => a.key === key);
@@ -50,7 +54,10 @@ function processMetricsPayload(payload) {
 
           if (!sessionId || !querySource || !tokenType || value === undefined) continue;
 
-          if (model && !sessionModels[sessionId]) sessionModels[sessionId] = model;
+          if (model) {
+            if (!sessionModelTokens[sessionId]) sessionModelTokens[sessionId] = {};
+            sessionModelTokens[sessionId][model] = (sessionModelTokens[sessionId][model] ?? 0) + value;
+          }
 
           // IMPORTANT: Claude Code's OTLP metrics use DELTA aggregation
           // temporality (aggregationTemporality: 1), meaning each exported
@@ -88,7 +95,9 @@ function rewriteCsv() {
 
     const inputCombined = totalFreshInput + totalCacheRead + totalCacheCreation;
     const totalTokens = inputCombined + totalOutput;
-    const model = sessionModels[sessionId] ?? "unknown";
+    const modelTokens = sessionModelTokens[sessionId] ?? {};
+    const model =
+      Object.entries(modelTokens).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "unknown";
 
     rows.push(
       [sessionId, model, inputCombined, totalOutput, totalCacheRead, totalCacheCreation, totalTokens].join(","),
