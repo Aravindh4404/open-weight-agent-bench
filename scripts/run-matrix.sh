@@ -35,11 +35,11 @@
 set -uo pipefail  # not -e: one failed combo shouldn't kill the whole run
 
 # ============ INSTANCE CONFIG — edit per instance ============
-INSTANCE_ID="marshmallow-1343"
-REPO_URL="https://github.com/marshmallow-code/marshmallow.git"
-BASE_COMMIT="2be2d83a1a9a6d3d9b85804f3ab545cecc409bb0"
+INSTANCE_ID="xarray-4094"
+REPO_URL="https://github.com/pydata/xarray.git"
+BASE_COMMIT="a64cf2d5476e7bbda099b34c40b7be1880dbd39a"
 PROMPT_FILE="$(pwd)/prompt-${INSTANCE_ID}.txt"
-PIP_INSTALL_CMD="pip install -e . && pip install pytest simplejson"
+PIP_INSTALL_CMD="SETUPTOOLS_SCM_PRETEND_VERSION=0.15.2 pip install -e . && pip install 'numpy<1.24' 'pandas<1.4' pytest"
 PYTHON_VERSION="3.9"
 MODEL_SLUGS=("z-ai/glm-5.2" "")
 MODEL_NAMES=("glm" "sonnet")
