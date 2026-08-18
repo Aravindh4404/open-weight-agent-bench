@@ -37,7 +37,4 @@ flask-4045,opencode,opus,208,1537116,10651,1547767,PARTIAL,session_filtered_dash
 django-10914,opencode,opus,242,1428750,13045,1441795,PASS,session_filtered_dashboard_transcription
 marshmallow-1343,claude,opus,281,1605501,14935,1620436,PASS,grading_pytest_exact_match
 marshmallow-1343,pi,opus,103,132869,4497,137366,PASS,grading_pytest_exact_match
-marshmallow-1343,opencode,opus,171,1339906,8981,1348887,PASS,full_csv_export_exact_match
-sympy-12481,claude,opus,197,747153,6307,753460,PASS,grading_pytest_full_suite
-sympy-12481,pi,opus,170,104016,2376,106392,PASS,grading_pytest_full_suite
-sympy-12481,opencode,opus,311,1440234,11109,1451343,PASS,full_csv_export_exact_match
+marshmallow-1343,opencode,opus,171,MANUAL,MANUAL,MANUAL,PASS,grading_pytest_exact_match

@@ -169,7 +169,18 @@ Check with:
 opencode stats --days 0 --models
 ```
 No custom code — reads OpenCode's own local SQLite database directly
-(`~/AppData/Roaming/opencode/opencode.db`).
+(`~/.local/share/opencode/opencode.db`).
+
+**CORRECTED 2026-08-13:** this doc previously gave the path as
+`~/AppData/Roaming/opencode/opencode.db`, which does not exist on this
+machine. Two things matter when reading it directly:
+- There is a multi-MB uncheckpointed `-wal` alongside the `.db`. Copy
+  `.db`, `.db-wal` and `.db-shm` together, or you read stale data.
+- The `session` table already carries `tokens_input`, `tokens_output`,
+  `tokens_reasoning`, `tokens_cache_read`, `tokens_cache_write` and
+  `cost` per session, plus a `directory` column that maps a session to
+  its benchmark instance. `scripts/extract-opencode-usage.js` does all
+  of this; OpenCode no longer needs a manual OpenRouter pull.
 
 **First verification, done in this session:** compared the "Model Usage"
 block against 6 matching OpenRouter rows for the same session.

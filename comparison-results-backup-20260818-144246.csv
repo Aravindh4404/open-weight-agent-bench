@@ -40,4 +40,4 @@ marshmallow-1343,pi,opus,103,132869,4497,137366,PASS,grading_pytest_exact_match
 marshmallow-1343,opencode,opus,171,1339906,8981,1348887,PASS,full_csv_export_exact_match
 sympy-12481,claude,opus,197,747153,6307,753460,PASS,grading_pytest_full_suite
 sympy-12481,pi,opus,170,104016,2376,106392,PASS,grading_pytest_full_suite
-sympy-12481,opencode,opus,311,1440234,11109,1451343,PASS,full_csv_export_exact_match
+sympy-12481,opencode,opus,311,MANUAL,MANUAL,MANUAL,PASS,grading_pytest_full_suite

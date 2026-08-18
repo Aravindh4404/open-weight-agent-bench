@@ -32,12 +32,3 @@ xarray-4094,opencode,sonnet,520,2133307,15481,2148788,PASS,full_csv_export_exact
 flask-4045,claude,opus,153,1077563,7608,1085171,PARTIAL,grading_pytest_missed_second_fix_location
 django-10914,claude,opus,189,1041294,7748,1049042,PASS,runtests_exact_match
 django-10914,pi,opus,174,145368,4885,150253,PASS,runtests_exact_match
-flask-4045,pi,opus,131,132225,4592,136817,PARTIAL,grading_pytest_missed_second_fix_location
-flask-4045,opencode,opus,208,1537116,10651,1547767,PARTIAL,session_filtered_dashboard_transcription
-django-10914,opencode,opus,242,1428750,13045,1441795,PASS,session_filtered_dashboard_transcription
-marshmallow-1343,claude,opus,281,1605501,14935,1620436,PASS,grading_pytest_exact_match
-marshmallow-1343,pi,opus,103,132869,4497,137366,PASS,grading_pytest_exact_match
-marshmallow-1343,opencode,opus,171,1339906,8981,1348887,PASS,full_csv_export_exact_match
-sympy-12481,claude,opus,197,747153,6307,753460,PASS,grading_pytest_full_suite
-sympy-12481,pi,opus,170,104016,2376,106392,PASS,grading_pytest_full_suite
-sympy-12481,opencode,opus,311,1440234,11109,1451343,PASS,full_csv_export_exact_match
