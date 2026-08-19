@@ -43,4 +43,4 @@ sympy-12481,pi,opus,170,104016,2376,106392,PASS,grading_pytest_full_suite
 sympy-12481,opencode,opus,311,1440234,11109,1451343,PASS,full_csv_export_exact_match
 xarray-4094,claude,opus,185,822450,7620,830070,PASS,grading_pytest_full_suite
 xarray-4094,pi,opus,73,32836,1891,34727,PASS,grading_pytest_full_suite
-xarray-4094,opencode,opus,160,708846,7026,715872,PASS,session_filtered_dashboard_transcription
+xarray-4094,opencode,opus,160,MANUAL,MANUAL,MANUAL,PASS,grading_pytest_full_suite

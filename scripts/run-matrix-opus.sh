@@ -6,11 +6,11 @@
 set -uo pipefail
 
 # ============ INSTANCE CONFIG — edit per instance ============
-INSTANCE_ID="sympy-12481"
-REPO_URL="https://github.com/sympy/sympy.git"
-BASE_COMMIT="c807dfe7569692cad24f02a08477b70c1679a4dd"
+INSTANCE_ID="xarray-4094"
+REPO_URL="https://github.com/pydata/xarray.git"
+BASE_COMMIT="a64cf2d5476e7bbda099b34c40b7be1880dbd39a"
 PROMPT_FILE="$(pwd)/prompt-${INSTANCE_ID}.txt"
-PIP_INSTALL_CMD="pip install -e . && pip install pytest"
+PIP_INSTALL_CMD="SETUPTOOLS_SCM_PRETEND_VERSION=0.15.2 pip install -e . && pip install 'numpy<1.24' 'pandas<1.4' pytest"
 PYTHON_VERSION="3.9"
 
 # === MODEL CONFIG — Opus 5 only ===
